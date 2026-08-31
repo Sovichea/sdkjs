@@ -95,6 +95,41 @@
 			}
 		}
 	}
+	function DrawTextLogicalUnit(oUnit, oContext, nX, nY, nFontSize, coeff)
+	{
+		if (!oUnit || !oContext || !oContext.IsTextLogicalUnitsEnabled
+			|| !oContext.IsTextLogicalUnitsEnabled() || !oContext.DrawTextLogicalUnit
+			|| 0 !== oUnit.LogicalAdvanceY)
+			return false;
+
+		if (undefined === coeff)
+			coeff = 1;
+
+		let sFontName = AscCommon.FontNameMap.GetName(oUnit.FontId);
+		oContext.SetFontInternal(sFontName, nFontSize, oUnit.FontStyle);
+
+		let nKoef = COEF * nFontSize * coeff;
+		let arrComponents = [];
+		for (let nIndex = 0; nIndex < oUnit.Components.length; ++nIndex)
+		{
+			let oComponent = oUnit.Components[nIndex];
+			arrComponents.push({
+				Gid : oComponent.Gid,
+				X   : oComponent.X * nKoef,
+				Y   : -oComponent.Y * nKoef
+			});
+		}
+
+		return oContext.DrawTextLogicalUnit({
+			Unicode       : oUnit.Unicode,
+			SourceIndex   : oUnit.SourceIndex,
+			VisualIndex   : oUnit.VisualIndex,
+			LogicalAdvance: oUnit.LogicalAdvanceX * nKoef,
+			VisualX       : nX,
+			VisualY       : nY,
+			Components    : arrComponents
+		});
+	}
 	function CompareGraphemes(g)
 	{
 		if (g.length !== GRAPHEME_LEN)
@@ -286,6 +321,7 @@
 	window['AscFonts'].NO_GRAPHEME           = NO_GRAPHEME;
 	window['AscFonts'].InitGrapheme          = InitGrapheme;
 	window['AscFonts'].DrawGrapheme          = DrawGrapheme;
+	window['AscFonts'].DrawTextLogicalUnit   = DrawTextLogicalUnit;
 	window['AscFonts'].CompareGraphemes      = CompareGraphemes;
 	window['AscFonts'].AddGlyphToGrapheme    = AddGlyphToGrapheme;
 	window['AscFonts'].GetGrapheme           = GetGrapheme;

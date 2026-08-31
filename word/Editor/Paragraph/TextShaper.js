@@ -50,7 +50,8 @@
 		this.Spacing   = 0;
 		this.AscFont   = false; // Специальный случай, когда используемый шрифт ASCW3, а не тот, что задан в настройках
 		
-		this.MaskSymbol = null; // Символ, который используется для маскирования текста в полях ввода
+		this.MaskSymbol      = null; // Символ, который используется для маскирования текста в полях ввода
+		this.AutoLogicalUnits = false;
 	}
 	CParagraphTextShaper.prototype = Object.create(AscFonts.CTextShaper.prototype);
 	CParagraphTextShaper.prototype.constructor = CParagraphTextShaper;
@@ -64,6 +65,10 @@
 		this.Ligatures = Asc.LigaturesType.None;
 		this.Spacing   = 0;
 		this.AscFont   = false;
+		this.AutoLogicalUnits = !isTemporary && AscCommon.IsEnhancedUnicodeEnabled
+			&& AscCommon.IsEnhancedUnicodeEnabled() && !this.IsLogicalUnitsEnabled();
+		if (this.AutoLogicalUnits)
+			this.BeginLogicalUnits();
 		
 		this.ClearBuffer();
 	};
@@ -113,6 +118,12 @@
 		
 		return result;
 	};
+	CParagraphTextShaper.prototype.ShapeLogical = function(oParagraph, fDiagnostic)
+	{
+		this.BeginLogicalUnits(fDiagnostic);
+		this.Shape(oParagraph);
+		return this.EndLogicalUnits();
+	};
 	CParagraphTextShaper.prototype.Shape = function(oParagraph)
 	{
 		this.Init(false);
@@ -122,6 +133,7 @@
 			oThis.HandleRun(oRun, nStartPos, nEndPos);
 		});
 		this.FlushWord();
+		this.private_EndAutoLogicalUnits();
 	};
 	CParagraphTextShaper.prototype.ShapeRange = function(oParagraph, oStart, oEnd, isTemporary)
 	{
@@ -132,12 +144,21 @@
 			oThis.HandleRun(oRun, nStartPos, nEndPos);
 		}, oStart, oEnd);
 		this.FlushWord();
+		this.private_EndAutoLogicalUnits();
 	};
 	CParagraphTextShaper.prototype.ShapeRun = function(run)
 	{
 		this.Init(false);
 		this.HandleRun(run, 0, run.GetElementsCount());
 		this.FlushWord();
+		this.private_EndAutoLogicalUnits();
+	};
+	CParagraphTextShaper.prototype.private_EndAutoLogicalUnits = function()
+	{
+		if (!this.AutoLogicalUnits)
+			return;
+		this.EndLogicalUnits();
+		this.AutoLogicalUnits = false;
 	};
 	CParagraphTextShaper.prototype.HandleRun = function(oRun, nStartPos, nEndPos)
 	{
@@ -146,6 +167,9 @@
 		for (let nPos = nStartPos; nPos < nEndPos; ++nPos)
 		{
 			let oItem = oRun.GetElement(nPos);
+			if (!this.Temporary && oItem.SetTextLogicalUnit
+				&& (this.IsLogicalUnitsEnabled() || oItem.GetTextLogicalUnit()))
+				oItem.SetTextLogicalUnit(null);
 			if (oItem.IsPdfText())
 			{
 				this.FlushWord();
@@ -175,6 +199,19 @@
 					this.FlushWord();
 			}
 		}
+	};
+	CParagraphTextShaper.prototype.FlushLogicalUnit = function(oVisualUnit, nCodePointsCount)
+	{
+		let oUnit = AscFonts.CTextShaper.prototype.FlushLogicalUnit.call(this, oVisualUnit, nCodePointsCount);
+		if (!oUnit || this.Temporary)
+			return oUnit;
+
+		let nBufferIndex = this.IsRtlDirection() ? this.BufferIndex - nCodePointsCount : this.BufferIndex;
+		let nDrawIndex = this.IsRtlDirection() ? nBufferIndex + nCodePointsCount - 1 : nBufferIndex;
+		let oItem = this.Buffer[nDrawIndex];
+		if (oItem && oItem.SetTextLogicalUnit)
+			oItem.SetTextLogicalUnit(oUnit);
+		return oUnit;
 	};
 	CParagraphTextShaper.prototype.FlushGrapheme = function(nGrapheme, nWidth, nCodePointsCount, isLigature)
 	{

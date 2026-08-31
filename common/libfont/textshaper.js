@@ -333,6 +333,7 @@
 		this.LogicalUnits.push(oUnit);
 		if (this.LogicalUnitDiagnostic)
 			this.LogicalUnitDiagnostic(oUnit);
+		return oUnit;
 	};
 	CTextShaper.prototype.FlushGrapheme = function(nGrapheme, nWidth, nCodePointsCount, isLigature)
 	{
