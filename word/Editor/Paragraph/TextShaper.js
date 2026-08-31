@@ -79,6 +79,11 @@
 
 		return nCodePoint;
 	};
+	CParagraphTextShaper.prototype.GetSourceCodePoint = function(oItem)
+	{
+		// Masked controls must not expose their underlying source text in export metadata.
+		return null !== this.MaskSymbol ? this.MaskSymbol : oItem.GetCodePoint();
+	};
 	CParagraphTextShaper.prototype.GetFontInfo = function(nFontSlot)
 	{
 		if (!this.TextPr)

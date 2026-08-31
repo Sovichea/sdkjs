@@ -51,9 +51,17 @@
 	 */
 	function CTextShaper()
 	{
-		this.Buffer         = [];
-		this.BufferIndex    = 0;
-		this.Script         = -1;
+		this.Buffer                  = [];
+		this.BufferCodePoints        = [];
+		this.BufferSourceIndexes     = [];
+		this.BufferIndex             = 0;
+		this.LogicalUnitsEnabled     = false;
+		this.LogicalUnits            = [];
+		this.LogicalSourceIndex      = 0;
+		this.LogicalVisualIndex      = 0;
+		this.LogicalSegmentIndex     = 0;
+		this.LogicalUnitDiagnostic   = null;
+		this.Script                  = -1;
 		this.FontId         = -1;
 		this.FontSubst      = false;
 		this.FontSlot       = AscWord.fontslot_None;
@@ -63,8 +71,10 @@
 	}
 	CTextShaper.prototype.ClearBuffer = function()
 	{
-		this.Buffer.length = 0;
-		this.BufferIndex   = 0;
+		this.Buffer.length              = 0;
+		this.BufferCodePoints.length    = 0;
+		this.BufferSourceIndexes.length = 0;
+		this.BufferIndex                 = 0;
 
 		this.Script    = -1;
 		this.FontId    = -1;
@@ -85,9 +95,18 @@
 	CTextShaper.prototype.AppendToString = function(oItem)
 	{
 		let nCodePoint = this.GetCodePoint(oItem);
-		nCodePoint = this.private_CheckNewSegment(nCodePoint);
+		let nSourceCodePoint = this.LogicalUnitsEnabled ? this.GetSourceCodePoint(oItem) : nCodePoint;
+		let nSourceIndex = this.LogicalUnitsEnabled ? this.LogicalSourceIndex++ : -1;
+		let nShapingCodePoint = this.private_CheckNewSegment(nCodePoint);
 		this.Buffer.push(oItem);
-		AscFonts.HB_AppendToString(nCodePoint);
+		if (this.LogicalUnitsEnabled)
+		{
+			// Keep the editor-source scalar beside the source item. CODEPOINTS in engine.js
+			// contains the presentation/shaping scalar and cannot be authoritative for export.
+			this.BufferCodePoints.push(nSourceCodePoint);
+			this.BufferSourceIndexes.push(nSourceIndex);
+		}
+		AscFonts.HB_AppendToString(nShapingCodePoint);
 	};
 	CTextShaper.prototype.EndString = function()
 	{
@@ -112,6 +131,8 @@
 		this.FontSize = oFontInfo.Size;
 
 		AscFonts.HB_ShapeString(this, nFontId, oFontInfo.Style, this.FontId, this.GetLigaturesType(nScript), nScript, this.Direction, "en");
+		if (this.LogicalUnitsEnabled)
+			++this.LogicalSegmentIndex;
 
 		// Значит шрифт был подобран, возвращаем назад состояние отрисовщика
 		if (this.FontId.m_pFaceInfo.family_name !== oFontInfo.Name)
@@ -235,6 +256,83 @@
 	CTextShaper.prototype.GetCodePoint = function(oItem)
 	{
 		return oItem;
+	};
+	CTextShaper.prototype.GetSourceCodePoint = function(oItem)
+	{
+		return this.GetCodePoint(oItem);
+	};
+	CTextShaper.prototype.BeginLogicalUnits = function(fDiagnostic)
+	{
+		this.LogicalUnitsEnabled   = true;
+		this.LogicalUnits.length   = 0;
+		this.LogicalSourceIndex    = 0;
+		this.LogicalVisualIndex    = 0;
+		this.LogicalSegmentIndex   = 0;
+		if ("function" === typeof(fDiagnostic))
+			this.LogicalUnitDiagnostic = fDiagnostic;
+		else if (true === fDiagnostic)
+		{
+			this.LogicalUnitDiagnostic = function(oUnit)
+			{
+				console.log("Enhanced Unicode logical unit", {
+					SourceIndex  : oUnit.SourceIndex,
+					VisualIndex  : oUnit.VisualIndex,
+					SegmentIndex : oUnit.SegmentIndex,
+					Unicode      : oUnit.Unicode,
+					VisualX      : oUnit.VisualX,
+					VisualY      : oUnit.VisualY,
+					Components   : oUnit.Components
+				});
+			};
+		}
+		else
+			this.LogicalUnitDiagnostic = null;
+	};
+	CTextShaper.prototype.EndLogicalUnits = function()
+	{
+		let arrUnits = this.GetLogicalUnits();
+		this.LogicalUnitsEnabled   = false;
+		this.LogicalUnitDiagnostic = null;
+		return arrUnits;
+	};
+	CTextShaper.prototype.IsLogicalUnitsEnabled = function()
+	{
+		return this.LogicalUnitsEnabled;
+	};
+	CTextShaper.prototype.GetLogicalUnits = function()
+	{
+		return this.LogicalUnits.slice().sort(function(a, b)
+		{
+			return a.SourceIndex - b.SourceIndex;
+		});
+	};
+	CTextShaper.prototype.FlushLogicalUnit = function(oVisualUnit, nCodePointsCount)
+	{
+		if (!this.LogicalUnitsEnabled || nCodePointsCount <= 0)
+			return;
+
+		let nBufferIndex = this.IsRtlDirection() ? this.BufferIndex - nCodePointsCount : this.BufferIndex;
+		if (nBufferIndex < 0 || nBufferIndex + nCodePointsCount > this.Buffer.length)
+			return;
+
+		let arrUnicode = this.BufferCodePoints.slice(nBufferIndex, nBufferIndex + nCodePointsCount);
+		let oUnit = {
+			Unicode          : arrUnicode,
+			SourceIndex      : this.BufferSourceIndexes[nBufferIndex],
+			VisualIndex      : this.LogicalVisualIndex++,
+			SegmentIndex     : this.LogicalSegmentIndex,
+			FontId           : oVisualUnit.FontId,
+			FontStyle        : oVisualUnit.FontStyle,
+			LogicalAdvanceX  : oVisualUnit.LogicalAdvanceX,
+			LogicalAdvanceY  : oVisualUnit.LogicalAdvanceY,
+			VisualX          : oVisualUnit.VisualX,
+			VisualY          : oVisualUnit.VisualY,
+			Components       : oVisualUnit.Components
+		};
+
+		this.LogicalUnits.push(oUnit);
+		if (this.LogicalUnitDiagnostic)
+			this.LogicalUnitDiagnostic(oUnit);
 	};
 	CTextShaper.prototype.FlushGrapheme = function(nGrapheme, nWidth, nCodePointsCount, isLigature)
 	{

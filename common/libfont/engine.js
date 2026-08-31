@@ -567,6 +567,10 @@ function onLoadFontsModule(window, undefined)
 		let type, flags, gid, cluster, x_advance, y_advance, x_offset, y_offset;
 		let isLigature = false;
 		let nWidth     = 0;
+		let isLogicalUnits = textShaper.IsLogicalUnitsEnabled && textShaper.IsLogicalUnitsEnabled();
+		let nVisualX = 0;
+		let nVisualY = 0;
+		let oLogicalVisual = null;
 		let reader = READER;
 		let glyphsCount = retObj.count;
 		for (let i = 0; i < glyphsCount; i++)
@@ -583,6 +587,8 @@ function onLoadFontsModule(window, undefined)
 			if (cluster !== prevCluster && -1 !== prevCluster)
 			{
 				CODEPOINTS_CALCULATOR.calculate(isRtl ? prevCluster : cluster);
+				if (isLogicalUnits)
+					textShaper.FlushLogicalUnit(oLogicalVisual, CODEPOINTS_CALCULATOR.getCount());
 				textShaper.FlushGrapheme(AscFonts.GetGrapheme(CODEPOINTS_CALCULATOR), nWidth, CODEPOINTS_CALCULATOR.getCount(), isLigature);
 				nWidth = 0;
 			}
@@ -592,13 +598,39 @@ function onLoadFontsModule(window, undefined)
 				prevCluster = cluster;
 				isLigature  = LIGATURE === type;
 				AscFonts.InitGrapheme(fontId, fontStyle);
+				if (isLogicalUnits)
+				{
+					oLogicalVisual = {
+						FontId          : fontId,
+						FontStyle       : fontStyle,
+						LogicalAdvanceX : 0,
+						LogicalAdvanceY : 0,
+						VisualX         : nVisualX,
+						VisualY         : nVisualY,
+						Components      : []
+					};
+				}
 			}
 
 			AscFonts.AddGlyphToGrapheme(gid, x_advance, y_advance, x_offset, y_offset);
+			if (isLogicalUnits)
+			{
+				oLogicalVisual.Components.push({
+					Gid : gid,
+					X   : oLogicalVisual.LogicalAdvanceX + x_offset,
+					Y   : oLogicalVisual.LogicalAdvanceY + y_offset
+				});
+				oLogicalVisual.LogicalAdvanceX += x_advance;
+				oLogicalVisual.LogicalAdvanceY += y_advance;
+				nVisualX += x_advance;
+				nVisualY += y_advance;
+			}
 			nWidth += x_advance * COEF;
 		}
 		
 		CODEPOINTS_CALCULATOR.calculate(isRtl ? 0 : CLUSTER_MAX);
+		if (isLogicalUnits)
+			textShaper.FlushLogicalUnit(oLogicalVisual, CODEPOINTS_CALCULATOR.getCount());
 		textShaper.FlushGrapheme(AscFonts.GetGrapheme(CODEPOINTS_CALCULATOR), nWidth, CODEPOINTS_CALCULATOR.getCount(), isLigature);
 		
 		retObj["free"]();
