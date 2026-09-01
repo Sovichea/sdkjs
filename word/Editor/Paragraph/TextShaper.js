@@ -56,7 +56,7 @@
 	CParagraphTextShaper.prototype = Object.create(AscFonts.CTextShaper.prototype);
 	CParagraphTextShaper.prototype.constructor = CParagraphTextShaper;
 
-	CParagraphTextShaper.prototype.Init = function(isTemporary)
+	CParagraphTextShaper.prototype.Init = function(isTemporary, oParagraph)
 	{
 		this.Parent    = null;
 		this.Paragraph = null;
@@ -65,12 +65,36 @@
 		this.Ligatures = Asc.LigaturesType.None;
 		this.Spacing   = 0;
 		this.AscFont   = false;
+		this.ClearBuffer();
+		this.SetWritingMode(this.private_GetParagraphWritingMode(oParagraph));
 		this.AutoLogicalUnits = !isTemporary && AscCommon.IsEnhancedUnicodeEnabled
 			&& AscCommon.IsEnhancedUnicodeEnabled() && !this.IsLogicalUnitsEnabled();
 		if (this.AutoLogicalUnits)
 			this.BeginLogicalUnits();
-		
-		this.ClearBuffer();
+	};
+	CParagraphTextShaper.prototype.private_GetParagraphWritingMode = function(oParagraph)
+	{
+		if (!oParagraph || "undefined" === typeof AscFormat)
+			return AscFonts.WRITING_MODE.Horizontal;
+
+		let oParent = oParagraph.GetParent ? oParagraph.GetParent() : oParagraph.Parent;
+		for (let nDepth = 0; oParent && nDepth < 16; ++nDepth)
+		{
+			if (oParent.getBodyPr)
+			{
+				let oBodyPr = oParent.getBodyPr();
+				if (oBodyPr && (oBodyPr.vert === AscFormat.nVertTTeaVert
+					|| oBodyPr.vert === AscFormat.nVertTTmongolianVert))
+					return AscFonts.WRITING_MODE.Vertical;
+				return AscFonts.WRITING_MODE.Horizontal;
+			}
+
+			let oNext = oParent.GetParent ? oParent.GetParent() : oParent.Parent;
+			if (!oNext || oNext === oParent)
+				break;
+			oParent = oNext;
+		}
+		return AscFonts.WRITING_MODE.Horizontal;
 	};
 	CParagraphTextShaper.prototype.GetCodePoint = function(oItem)
 	{
@@ -126,7 +150,7 @@
 	};
 	CParagraphTextShaper.prototype.Shape = function(oParagraph)
 	{
-		this.Init(false);
+		this.Init(false, oParagraph);
 		let oThis = this;
 		oParagraph.CheckRunContent(function(oRun, nStartPos, nEndPos)
 		{
@@ -137,7 +161,7 @@
 	};
 	CParagraphTextShaper.prototype.ShapeRange = function(oParagraph, oStart, oEnd, isTemporary)
 	{
-		this.Init(isTemporary);
+		this.Init(isTemporary, oParagraph);
 		let oThis = this;
 		oParagraph.CheckRunContent(function(oRun, nStartPos, nEndPos)
 		{
@@ -148,7 +172,7 @@
 	};
 	CParagraphTextShaper.prototype.ShapeRun = function(run)
 	{
-		this.Init(false);
+		this.Init(false, run && run.GetParagraph ? run.GetParagraph() : null);
 		this.HandleRun(run, 0, run.GetElementsCount());
 		this.FlushWord();
 		this.private_EndAutoLogicalUnits();

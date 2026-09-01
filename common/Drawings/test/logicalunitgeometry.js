@@ -68,23 +68,42 @@ vm.runInThisContext(source, {filename : "grapheme.js"});
 	assert.strictEqual(output.Components[1].Y, 32 * coefficient);
 })();
 
-(function testDisabledAndVerticalUnitsUseLegacyPath()
+(function testExplicitVerticalUnitsUseIdentityVGeometry()
 {
 	const unit = {
-		LogicalAdvanceY : 1,
-		Components : []
+		Unicode         : [0x4E00],
+		SourceIndex     : 0,
+		VisualIndex     : 0,
+		WritingMode     : 1,
+		FontId          : 7,
+		FontStyle       : 0,
+		LogicalAdvanceX : 0,
+		LogicalAdvanceY : -576,
+		Components      : [{Gid : 40, X : 0, Y : 0}]
 	};
+	let output = null;
 	const enabled = {
 		IsTextLogicalUnitsEnabled : function() { return true; },
-		DrawTextLogicalUnit : function() { throw new Error("must not emit"); }
+		SetFontInternal : function() {},
+		DrawTextLogicalUnit : function(value) { output = value; return true; }
 	};
+	assert.strictEqual(AscFonts.DrawTextLogicalUnit(unit, enabled, 10, 20, 12), true);
+	assert.strictEqual(output.WritingMode, 1);
+	assert.strictEqual(output.LogicalAdvance, 576 * (25.4 / 72 / 64 / 576 * 12));
+
+	unit.LogicalAdvanceY = 576;
+	assert.strictEqual(AscFonts.DrawTextLogicalUnit(unit, enabled, 0, 0, 12), false,
+		"bottom-to-top vertical units must use compatibility drawing");
+
+	unit.LogicalAdvanceY = -576;
+	unit.WritingMode = 0;
 	assert.strictEqual(AscFonts.DrawTextLogicalUnit(unit, enabled, 0, 0, 12), false);
 
 	const disabled = {
 		IsTextLogicalUnitsEnabled : function() { return false; },
 		DrawTextLogicalUnit : function() { throw new Error("must not emit"); }
 	};
-	unit.LogicalAdvanceY = 0;
+	unit.WritingMode = 1;
 	assert.strictEqual(AscFonts.DrawTextLogicalUnit(unit, disabled, 0, 0, 12), false);
 })();
 

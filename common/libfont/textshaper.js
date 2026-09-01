@@ -38,6 +38,10 @@
 	}
 
 	const DEFAULT_TEXTFONTINFO = new CTextFontInfo();
+	const WRITING_MODE = {
+		Horizontal : 0,
+		Vertical   : 1
+	};
 
 	// Функции для возможной перегрузки
 	// 1. FlushGrapheme - основная функция, которую нужно ОБЯЗАТЕЛЬНО реализовывать в дочернем классе
@@ -68,6 +72,7 @@
 		this.FontSize       = 10;
 		this.ForceCheckFont = false;
 		this.Direction      = AscFonts.HB_DIRECTION.HB_DIRECTION_LTR;
+		this.WritingMode    = 0;
 	}
 	CTextShaper.prototype.ClearBuffer = function()
 	{
@@ -155,9 +160,25 @@
 	{
 		return AscWord.GetFontSlot(nUnicode, AscWord.fonthint_Default, lcid_unknown, false, false);
 	};
+	CTextShaper.prototype.SetWritingMode = function(nWritingMode)
+	{
+		if (this.Buffer.length > 0)
+			this.FlushWord();
+		this.WritingMode = 1 === nWritingMode ? 1 : 0;
+	};
+	CTextShaper.prototype.GetWritingMode = function()
+	{
+		return this.WritingMode;
+	};
+	CTextShaper.prototype.GetInlineAdvance = function(nAdvanceX, nAdvanceY)
+	{
+		return WRITING_MODE.Vertical === this.WritingMode ? -nAdvanceY : nAdvanceX;
+	};
 	CTextShaper.prototype.GetDirection = function(nScript)
 	{
-		return AscFonts.hb_get_script_horizontal_direction(nScript);
+		return 1 === this.WritingMode
+			? AscFonts.HB_DIRECTION.HB_DIRECTION_TTB
+			: AscFonts.hb_get_script_horizontal_direction(nScript);
 	};
 	CTextShaper.prototype.private_CheckNewSegment = function(nUnicode)
 	{
@@ -318,6 +339,7 @@
 		let arrUnicode = this.BufferCodePoints.slice(nBufferIndex, nBufferIndex + nCodePointsCount);
 		let oUnit = {
 			Unicode          : arrUnicode,
+			WritingMode      : oVisualUnit.WritingMode || 0,
 			SourceIndex      : this.BufferSourceIndexes[nBufferIndex],
 			VisualIndex      : this.LogicalVisualIndex++,
 			SegmentIndex     : this.LogicalSegmentIndex,
@@ -381,6 +403,7 @@
 	window['AscFonts'].CTextFontInfo        = CTextFontInfo;
 	window['AscFonts'].CTextShaper          = CTextShaper;
 	window['AscFonts'].DEFAULT_TEXTFONTINFO = DEFAULT_TEXTFONTINFO;
+	window['AscFonts'].WRITING_MODE         = WRITING_MODE;
 	window['AscFonts'].isRtlScript          = isRtlScript;
 
 })(window);

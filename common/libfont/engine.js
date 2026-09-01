@@ -561,13 +561,16 @@ function onLoadFontsModule(window, undefined)
 			return;
 		
 		let isRtl = direction === AscFonts.HB_DIRECTION.HB_DIRECTION_RTL;
+		let isVertical = direction === AscFonts.HB_DIRECTION.HB_DIRECTION_TTB;
+		let isLogicalDirectionSupported = direction !== AscFonts.HB_DIRECTION.HB_DIRECTION_BTT;
 		
 		CODEPOINTS_CALCULATOR.start(isRtl ? CLUSTER_MAX : 0);
 		let prevCluster = -1;
 		let type, flags, gid, cluster, x_advance, y_advance, x_offset, y_offset;
 		let isLigature = false;
 		let nWidth     = 0;
-		let isLogicalUnits = textShaper.IsLogicalUnitsEnabled && textShaper.IsLogicalUnitsEnabled();
+		let isLogicalUnits = isLogicalDirectionSupported
+			&& textShaper.IsLogicalUnitsEnabled && textShaper.IsLogicalUnitsEnabled();
 		let nVisualX = 0;
 		let nVisualY = 0;
 		let oLogicalVisual = null;
@@ -601,6 +604,7 @@ function onLoadFontsModule(window, undefined)
 				if (isLogicalUnits)
 				{
 					oLogicalVisual = {
+						WritingMode     : isVertical ? 1 : 0,
 						FontId          : fontId,
 						FontStyle       : fontStyle,
 						LogicalAdvanceX : 0,
@@ -625,7 +629,7 @@ function onLoadFontsModule(window, undefined)
 				nVisualX += x_advance;
 				nVisualY += y_advance;
 			}
-			nWidth += x_advance * COEF;
+			nWidth += textShaper.GetInlineAdvance(x_advance, y_advance) * COEF;
 		}
 		
 		CODEPOINTS_CALCULATOR.calculate(isRtl ? 0 : CLUSTER_MAX);

@@ -14,13 +14,16 @@ global.window = global;
 global.AscFonts = {
 	HB_DIRECTION : {
 		HB_DIRECTION_LTR : 4,
-		HB_DIRECTION_RTL : 5
+		HB_DIRECTION_RTL : 5,
+		HB_DIRECTION_TTB : 6,
+		HB_DIRECTION_BTT : 7
 	},
 	HB_SCRIPT : {
 		HB_SCRIPT_INHERITED : 1,
 		HB_SCRIPT_COMMON : 2
 	},
 	HB_StartString : function() {},
+	StringShaper : function() {},
 	HB_AppendToString : function(codePoint) {
 		this.LastShapingCodePoint = codePoint;
 	}
@@ -33,9 +36,21 @@ global.Asc = {
 		None : 0
 	}
 };
+global.AscCommon = {
+	IsEnhancedUnicodeEnabled : function() { return false; }
+};
+global.AscFormat = {
+	nVertTTeaVert : 0,
+	nVertTThorz : 1,
+	nVertTTmongolianVert : 2,
+	nVertTTvert : 3,
+	nVertTTvert270 : 4
+};
 
 const source = fs.readFileSync(path.join(__dirname, "..", "textshaper.js"), "utf8");
 vm.runInThisContext(source, {filename : "textshaper.js"});
+const paragraphSource = fs.readFileSync(path.join(__dirname, "..", "..", "..", "word", "Editor", "Paragraph", "TextShaper.js"), "utf8");
+vm.runInThisContext(paragraphSource, {filename : "word/Editor/Paragraph/TextShaper.js"});
 
 function createShaper()
 {
@@ -68,6 +83,54 @@ function visualUnit(x, components)
 	shaper.BufferSourceIndexes = [0];
 	shaper.FlushLogicalUnit(visualUnit(0), 1);
 	assert.deepStrictEqual(shaper.GetLogicalUnits(), []);
+})();
+
+(function testExplicitVerticalWritingModeUsesTopToBottomShaping()
+{
+	const shaper = createShaper();
+	shaper.SetWritingMode(1);
+	assert.strictEqual(shaper.GetWritingMode(), 1);
+	assert.strictEqual(shaper.GetDirection(AscFonts.HB_SCRIPT.HB_SCRIPT_COMMON),
+		AscFonts.HB_DIRECTION.HB_DIRECTION_TTB);
+	assert.strictEqual(shaper.GetInlineAdvance(0, -640), 640,
+		"TTB paragraph layout must advance on the HarfBuzz Y axis");
+	shaper.SetWritingMode(0);
+	assert.strictEqual(shaper.GetWritingMode(), 0);
+	assert.strictEqual(shaper.GetInlineAdvance(640, 0), 640);
+})();
+
+(function testDrawingParagraphSelectsOnlyTrueVerticalWritingModes()
+{
+	function paragraph(vert)
+	{
+		const textBody = {
+			getBodyPr : function() { return {vert : vert}; }
+		};
+		const content = {
+			GetParent : function() { return textBody; }
+		};
+		return {
+			GetParent : function() { return content; },
+			CheckRunContent : function() {}
+		};
+	}
+
+	const shaper = AscWord.ParagraphTextShaper;
+	shaper.Shape(paragraph(AscFormat.nVertTTeaVert));
+	assert.strictEqual(shaper.GetWritingMode(), AscFonts.WRITING_MODE.Vertical);
+	assert.strictEqual(shaper.GetDirection(AscFonts.HB_SCRIPT.HB_SCRIPT_COMMON),
+		AscFonts.HB_DIRECTION.HB_DIRECTION_TTB);
+
+	shaper.Shape(paragraph(AscFormat.nVertTTmongolianVert));
+	assert.strictEqual(shaper.GetWritingMode(), AscFonts.WRITING_MODE.Vertical);
+
+	shaper.Shape(paragraph(AscFormat.nVertTTvert));
+	assert.strictEqual(shaper.GetWritingMode(), AscFonts.WRITING_MODE.Horizontal,
+		"rotated horizontal DrawingML text must remain Identity-H");
+
+	shaper.Shape(paragraph(AscFormat.nVertTThorz));
+	assert.strictEqual(shaper.GetWritingMode(), AscFonts.WRITING_MODE.Horizontal,
+		"writing mode must reset between paragraphs");
 })();
 
 (function testSubstitutionKeepsAuthoritativeUnicode()

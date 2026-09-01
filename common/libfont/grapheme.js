@@ -98,8 +98,12 @@
 	function DrawTextLogicalUnit(oUnit, oContext, nX, nY, nFontSize, coeff)
 	{
 		if (!oUnit || !oContext || !oContext.IsTextLogicalUnitsEnabled
-			|| !oContext.IsTextLogicalUnitsEnabled() || !oContext.DrawTextLogicalUnit
-			|| 0 !== oUnit.LogicalAdvanceY)
+			|| !oContext.IsTextLogicalUnitsEnabled() || !oContext.DrawTextLogicalUnit)
+			return false;
+
+		let nWritingMode = 1 === oUnit.WritingMode ? 1 : 0;
+		if ((0 === nWritingMode && 0 !== oUnit.LogicalAdvanceY)
+			|| (1 === nWritingMode && oUnit.LogicalAdvanceY >= 0))
 			return false;
 
 		if (undefined === coeff)
@@ -122,9 +126,11 @@
 
 		return oContext.DrawTextLogicalUnit({
 			Unicode       : oUnit.Unicode,
+			WritingMode   : nWritingMode,
 			SourceIndex   : oUnit.SourceIndex,
 			VisualIndex   : oUnit.VisualIndex,
-			LogicalAdvance: oUnit.LogicalAdvanceX * nKoef,
+			LogicalAdvance: (1 === nWritingMode
+				? -oUnit.LogicalAdvanceY : oUnit.LogicalAdvanceX) * nKoef,
 			VisualX       : nX,
 			VisualY       : nY,
 			Components    : arrComponents

@@ -11,14 +11,17 @@
 (function(window)
 {
 	const COMMAND = 84;
-	const VERSION = 1;
+	const HORIZONTAL_VERSION = 1;
+	const WRITING_MODE_VERSION = 2;
+	const WRITING_MODE_HORIZONTAL = 0;
+	const WRITING_MODE_VERTICAL = 1;
 	const MAX_RECORD_SIZE = 1024 * 1024;
 	const MAX_UNICODE_COUNT = 4096;
 	const MAX_COMPONENT_COUNT = 4096;
 	const FIXED_SCALE = 100000;
 	const INT32_MIN = -2147483648;
 	const INT32_MAX = 2147483647;
-	let enhancedUnicodeEnabled = false;
+	let enhancedUnicodeEnabled = true;
 
 	function isUnicodeScalar(value)
 	{
@@ -39,7 +42,10 @@
 
 	function validate(unit)
 	{
-		if (!unit || !Array.isArray(unit.Unicode)
+		if (!unit || (undefined !== unit.WritingMode
+			&& unit.WritingMode !== WRITING_MODE_HORIZONTAL
+			&& unit.WritingMode !== WRITING_MODE_VERTICAL)
+			|| !Array.isArray(unit.Unicode)
 			|| unit.Unicode.length === 0 || unit.Unicode.length > MAX_UNICODE_COUNT
 			|| !Array.isArray(unit.Components)
 			|| unit.Components.length === 0 || unit.Components.length > MAX_COMPONENT_COUNT)
@@ -97,6 +103,8 @@
 		this.Entries.push({
 			Unit : {
 				Unicode        : unit.Unicode.slice(),
+				WritingMode    : unit.WritingMode === WRITING_MODE_VERTICAL
+					? WRITING_MODE_VERTICAL : WRITING_MODE_HORIZONTAL,
 				SourceIndex    : unit.SourceIndex,
 				VisualIndex    : unit.VisualIndex,
 				LogicalAdvance : unit.LogicalAdvance,
@@ -132,8 +140,11 @@
 		let sizePosition = memory.GetCurPosition();
 		memory.Skip(4);
 
-		memory.WriteByte(VERSION);
-		memory.WriteByte(0);
+		let writingMode = unit.WritingMode === WRITING_MODE_VERTICAL
+			? WRITING_MODE_VERTICAL : WRITING_MODE_HORIZONTAL;
+		memory.WriteByte(writingMode === WRITING_MODE_VERTICAL
+			? WRITING_MODE_VERSION : HORIZONTAL_VERSION);
+		memory.WriteByte(writingMode);
 		memory.WriteShort(0);
 		memory.WriteLong(unit.Unicode.length);
 		for (let index = 0; index < unit.Unicode.length; ++index)
@@ -171,7 +182,12 @@
 	window["AscCommon"].IsEnhancedUnicodeEnabled  = isEnhancedUnicodeEnabled;
 	window["AscCommon"].LogicalUnitMetafile = {
 		Command            : COMMAND,
-		Version            : VERSION,
+		Version            : WRITING_MODE_VERSION,
+		HorizontalVersion  : HORIZONTAL_VERSION,
+		WritingMode        : {
+			Horizontal : WRITING_MODE_HORIZONTAL,
+			Vertical   : WRITING_MODE_VERTICAL
+		},
 		MaximumRecordSize  : MAX_RECORD_SIZE,
 		MaximumUnicode     : MAX_UNICODE_COUNT,
 		MaximumComponents  : MAX_COMPONENT_COUNT,

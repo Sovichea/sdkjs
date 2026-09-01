@@ -103,9 +103,19 @@ function fixture()
 	assert.strictEqual(readI32(bytes, 65), -25000);
 })();
 
+(function testVersionTwoCarriesVerticalWritingMode()
+{
+	const memory = new Memory();
+	const unit = fixture();
+	unit.WritingMode = AscCommon.LogicalUnitMetafile.WritingMode.Vertical;
+	assert.strictEqual(AscCommon.LogicalUnitMetafile.Write(memory, unit), true);
+	assert.deepStrictEqual(memory.data.slice(5, 9), [2, 1, 0, 0]);
+})();
+
 (function testInvalidUnitsDoNotMutateMemory()
 {
 	const invalidUnits = [
+		Object.assign(fixture(), {WritingMode : 2}),
 		Object.assign(fixture(), {Unicode : []}),
 		Object.assign(fixture(), {Unicode : [0xD800]}),
 		Object.assign(fixture(), {LogicalAdvance : -1}),
@@ -139,10 +149,11 @@ function fixture()
 
 (function testCapabilityGateAndSourceOrderQueue()
 {
+	assert.strictEqual(AscCommon.IsEnhancedUnicodeEnabled(), true);
+	AscCommon.SetEnhancedUnicodeEnabled(false);
 	assert.strictEqual(AscCommon.IsEnhancedUnicodeEnabled(), false);
 	AscCommon.SetEnhancedUnicodeEnabled(true);
 	assert.strictEqual(AscCommon.IsEnhancedUnicodeEnabled(), true);
-	AscCommon.SetEnhancedUnicodeEnabled(false);
 
 	const queue = new AscCommon.LogicalUnitMetafile.Queue();
 	const font = {Name : "Test", FontSize : 12, Style : 0};
