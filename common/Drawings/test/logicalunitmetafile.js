@@ -149,8 +149,14 @@ function fixture()
 
 (function testCapabilityGateAndSourceOrderQueue()
 {
+	assert.strictEqual(AscCommon.IsEnhancedUnicodeEnabled(), false);
+	assert.strictEqual(AscCommon.ApplyEnhancedUnicodeOption({}), false);
+	assert.strictEqual(AscCommon.ApplyEnhancedUnicodeOption({enhancedUnicode : true}), true);
 	assert.strictEqual(AscCommon.IsEnhancedUnicodeEnabled(), true);
-	AscCommon.SetEnhancedUnicodeEnabled(false);
+	assert.strictEqual(AscCommon.ApplyEnhancedUnicodeOption({}), false);
+	assert.strictEqual(AscCommon.ApplyEnhancedUnicodeOption({enhancedUnicode : true}), true);
+	assert.strictEqual(AscCommon.ApplyEnhancedUnicodeOption(null), false);
+	assert.strictEqual(AscCommon.ApplyEnhancedUnicodeOption({enhancedUnicode : false}), false);
 	assert.strictEqual(AscCommon.IsEnhancedUnicodeEnabled(), false);
 	AscCommon.SetEnhancedUnicodeEnabled(true);
 	assert.strictEqual(AscCommon.IsEnhancedUnicodeEnabled(), true);

@@ -13405,6 +13405,7 @@ background-repeat: no-repeat;\
 	};
 	window["asc_docs_api"].prototype["asc_nativeCalculateFile"] = function(options)
 	{
+		AscCommon.ApplyEnhancedUnicodeOption(options);
 		if (null == this.WordControl.m_oLogicDocument)
 			return;
 

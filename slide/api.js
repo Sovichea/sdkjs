@@ -8865,8 +8865,9 @@ background-repeat: no-repeat;\
 		g_oIdCounter.Set_Load(false);
 	};
 
-	window["asc_docs_api"].prototype["asc_nativeCalculateFile"] = function()
+	window["asc_docs_api"].prototype["asc_nativeCalculateFile"] = function(options)
 	{
+		AscCommon.ApplyEnhancedUnicodeOption(options);
 		this.bNoSendComments = false;
 		this.ShowParaMarks   = false;
 

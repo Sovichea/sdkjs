@@ -21,7 +21,7 @@
 	const FIXED_SCALE = 100000;
 	const INT32_MIN = -2147483648;
 	const INT32_MAX = 2147483647;
-	let enhancedUnicodeEnabled = true;
+	let enhancedUnicodeEnabled = false;
 
 	function isUnicodeScalar(value)
 	{
@@ -177,9 +177,16 @@
 		return enhancedUnicodeEnabled;
 	}
 
+	function applyEnhancedUnicodeOption(options)
+	{
+		setEnhancedUnicodeEnabled(!!options && true === options["enhancedUnicode"]);
+		return enhancedUnicodeEnabled;
+	}
+
 	window["AscCommon"] = window["AscCommon"] || {};
-	window["AscCommon"].SetEnhancedUnicodeEnabled = setEnhancedUnicodeEnabled;
-	window["AscCommon"].IsEnhancedUnicodeEnabled  = isEnhancedUnicodeEnabled;
+	window["AscCommon"].SetEnhancedUnicodeEnabled   = setEnhancedUnicodeEnabled;
+	window["AscCommon"].IsEnhancedUnicodeEnabled    = isEnhancedUnicodeEnabled;
+	window["AscCommon"].ApplyEnhancedUnicodeOption = applyEnhancedUnicodeOption;
 	window["AscCommon"].LogicalUnitMetafile = {
 		Command            : COMMAND,
 		Version            : WRITING_MODE_VERSION,
