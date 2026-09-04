@@ -3582,6 +3582,7 @@
 
   WorkbookView.prototype._setSelectionDialogType = function (selectionDialogType) {
       this.dialogSheetName = (c_oAscSelectionDialogType.Chart === selectionDialogType ||
+          c_oAscSelectionDialogType.CheckBox === selectionDialogType ||
           c_oAscSelectionDialogType.PivotTableData === selectionDialogType ||
           c_oAscSelectionDialogType.PivotTableReport === selectionDialogType);
       this.dialogAbsName = (c_oAscSelectionDialogType.None !== selectionDialogType &&
@@ -3604,7 +3605,8 @@
       var index;
       if (newSelectionDialogMode) {
           this.copyActiveSheet = this.wsActive;
-          if(c_oAscSelectionDialogType.Chart === selectionDialogType) {
+          if(c_oAscSelectionDialogType.Chart === selectionDialogType ||
+              c_oAscSelectionDialogType.CheckBox === selectionDialogType) {
               var sRef = selectRange;
               if(sRef.charAt(0) === '=') {
                   sRef = sRef.slice(1);

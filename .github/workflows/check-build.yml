@@ -1,131 +1,56 @@
 name: Check sdkjs
+
+permissions:
+  contents: read
+
 on:
   push:
     branches:
+      - main
       - fork
       - develop
       - 'release/**'
       - 'hotfix/**'
   pull_request:
     branches:
+      - main
       - fork
       - develop
       - 'release/**'
       - 'hotfix/**'
 jobs:
   code-style:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
 
       - name: setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
-          python-version: '3.10'
+          python-version: '3.14'
 
       - name: execute check styles
         run: python tests/code-style/check.py
 
   unit-tests:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
-      - name: Install dependencies
+      - name: Install system dependencies for headless Chromium
         run: |
           sudo apt-get update
           sudo apt-get install -y libatk1.0-0 libcups2 libatk-bridge2.0-0 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libnss3 libgbm1 libasound2t64
 
       - name: check out repository
-        uses: actions/checkout@v4
-
-      - name: Use Node.js 20
-        uses: actions/setup-node@v4
-        with:
-            node-version: 20
-      
-      - name: Run unit tests
-        run: |
-          npm install grunt-cli node-qunit-puppeteer
-          npm install --prefix build
-          node node_modules/grunt-cli/bin/grunt --gruntfile build/Gruntfile.js develop
-          node node_modules/node-qunit-puppeteer/cli.js tests/common/api/api.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/shortcuts/shortcuts.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/formula-tests/FormulaTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/formula-tests/databaseTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/formula-tests/dateTimeTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/formula-tests/financialTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/formula-tests/informationTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/formula-tests/engineeringTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/formula-tests/logicalTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/formula-tests/lookupAndReferenceTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/formula-tests/mathematicTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/formula-tests/statisticalTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/formula-tests/textAndDataTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/PivotTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/copy-paste-tests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/SheetStructureTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/autoFilterTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/UserProtectedRangesTest.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/FormulaTrace.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/NumFormatParse.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/DataValidationTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/conditionalFormattingTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/ExternalReference.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/SheetMemoryTest.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/whatIfAnalysisTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/spreadsheet-calculation/DynamicArraysTests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/cell/js-api/js-api.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/unit-tests/paragraphContentPos.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/unit-tests/deleted-text-recovery.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/content-control/block-level/cursorAndSelection.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/content-control/inline-level/checkbox.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/content-control/inline-level/cursorAndSelection.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/content-control/inline-level/date-time.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/custom-xml/custom-xml.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/document-calculation/floating-position/drawing.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/document-calculation/paragraph.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/document-calculation/table/correctBadTable.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/document-calculation/table/flowTablePosition.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/document-calculation/table/pageBreak.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/document-calculation/table/table-flow.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/document-calculation/table/table-grid.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/document-calculation/table/table-header.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/document-calculation/textShaper/textShaper.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/document-calculation/text-hyphenator/text-hyphenator.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/forms/forms.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/forms/complexForm.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/numbering/numberingApplicator.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/numbering/numberingCalculation.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/numbering/numberingAutocorrect.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/api/api.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/api/cross-ref.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/api/textInput.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/styles/displayStyle.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/styles/paraPr.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/styles/styleApplicator.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/text-autocorrection/as-you-type.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/plugins/pluginsApi.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/revisions/paragraph.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/merge-documents/mergeDocuments.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/math-autocorrection/math-autocorrection.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/math-ml/math-ml.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/change-case/change-case.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/js-api/js-api.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/shortcuts/shortcuts.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/word/copypaste/copy-paste-tests.html 30000 "--no-sandbox"
-          node node_modules/node-qunit-puppeteer/cli.js tests/slide/shortcuts/shortcuts.html 30000 "--no-sandbox"
-
-  build-test:
-    runs-on: self-hosted
-    steps:
-      - name: check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: sdkjs
 
+      # The forms / oform tests need the sdkjs-forms addon. Prefer a matching
+      # branch in sdkjs-forms, fall back to master (mirrors the build-test job).
       - name: check out repository sdkjs-forms current branch
         id: sdkjs-forms
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         continue-on-error: true
         with:
           repository: Euro-Office/sdkjs-forms
@@ -134,7 +59,7 @@ jobs:
           ref: ${{ github.ref }}
       - name: check out repository sdkjs-forms master branch
         if: steps.sdkjs-forms.outcome != 'success'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: Euro-Office/sdkjs-forms
           token: ${{ secrets.READ_PAT }}
@@ -142,13 +67,153 @@ jobs:
           ref: master
 
       - name: Use Node.js 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
+        with:
+            node-version: 20
+            cache: npm
+            cache-dependency-path: sdkjs/build/npm-shrinkwrap.json
+
+      - name: Build develop SDK
+        working-directory: sdkjs
+        env:
+          # sdkjs-forms is checked out as a sibling of sdkjs/, so relative to
+          # sdkjs/build/ (where npm --prefix cds to run the script) it's two
+          # levels up. Without this, the forms/oform tests fail with
+          # "AscOForm is not defined" / "CreateTextForm is not a function"
+          # because the addon is checked out but never merged into the build.
+          SDK_ADDONS: ../../sdkjs-forms
+        run: |
+          npm install node-qunit-puppeteer
+          npm ci --prefix build
+          npm run --prefix build develop
+
+      - name: Run unit tests
+        working-directory: sdkjs
+        run: node tests/runAll.js
+
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: check out repository
+        uses: actions/checkout@v7
+        with:
+          path: sdkjs
+
+      - name: check out repository sdkjs-forms current branch
+        id: sdkjs-forms
+        uses: actions/checkout@v7
+        continue-on-error: true
+        with:
+          repository: Euro-Office/sdkjs-forms
+          token: ${{ secrets.READ_PAT }}
+          path: sdkjs-forms
+          ref: ${{ github.ref }}
+      - name: check out repository sdkjs-forms master branch
+        if: steps.sdkjs-forms.outcome != 'success'
+        uses: actions/checkout@v7
+        with:
+          repository: Euro-Office/sdkjs-forms
+          token: ${{ secrets.READ_PAT }}
+          path: sdkjs-forms
+          ref: master
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v6
         with:
           node-version: 20
+          cache: npm
+          cache-dependency-path: sdkjs/build/npm-shrinkwrap.json
 
-      - name: Run build sdkjs
+      - name: Run build-tooling unit tests
         run: |
           cd sdkjs
-          npm install grunt-cli
-          npm install --prefix build
-          node node_modules/grunt-cli/bin/grunt --gruntfile build/Gruntfile.js
+          npm ci --prefix build
+          npm test --prefix build
+
+      - name: Run build sdkjs
+        env:
+          # sdkjs-forms is checked out as a sibling of sdkjs/ (mirrors the
+          # unit-tests job above). Without this, the addon is checked out but
+          # never merged into the bundle this job actually builds and tests.
+          SDK_ADDONS: ../../sdkjs-forms
+        run: |
+          cd sdkjs
+          # npm ci here too (not just in "Run build-tooling unit tests"): this job
+          # runs on a runner where steps share a workspace but a fresh checkout
+          # may still land without node_modules installed. npm ci is fast on a
+          # warm cache, so this is cheap insurance against "webpack: not found".
+          npm ci --prefix build
+          npm run --prefix build build
+
+      # doctrenderer/x2t execute these bundles on a V8 built with
+      # v8_enable_i18n_support=false, whose reduced Unicode tables reject
+      # supplementary-plane characters used as identifiers. Terser emitted the
+      # LaTeX symbol table's astral keys bare, and that V8 then failed the whole
+      # bundle with "SyntaxError: Invalid or unexpected token", aborting x2t on
+      # first start (issue #80). Every JS gate in this workflow runs on Node and
+      # headless Chromium -- both full-ICU -- so none of them can catch it.
+      #
+      # The check is a script rather than a grep because the residual failure
+      # mode is pure ASCII: with format.ascii_only but no format.quote_keys,
+      # Terser emits `\u{1d552}:"\\doublea"`, which no byte-range test flags.
+      - name: Assert built bundles are ASCII-only with no bare astral keys (#80)
+        run: |
+          cd sdkjs
+          node build/scripts/check-bundle-ascii.cjs
+
+      - name: Install QUnit runner dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libatk1.0-0 libcups2 libatk-bridge2.0-0 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libnss3 libgbm1 libasound2t64
+          cd sdkjs
+          npm install node-qunit-puppeteer
+
+      # The "unit-tests" job above runs the QUnit suite against raw source files
+      # (COMPILED unset) — it never touches the webpack output, so a regression in the
+      # actual bundle (wrong concatenation order, a helper-dedup bug, a stripped-directive
+      # bug, etc.) can pass CI entirely undetected. Re-point develop/sdkjs/*/scripts.js at
+      # the just-built sdk-all-min.js (COMPILED=1) and run a smoke test against that, so
+      # the built artifact itself is exercised at least once.
+      #
+      # tests/common/api/api.js only exercises AscCommon.* (editor-agnostic bootstrap
+      # APIs), never AscWord/AscCommonExcel/etc., so it's safe to reuse verbatim per
+      # module — api-cell.html/api-slide.html/api-visio.html point the same test file
+      # at cell/slide/visio's own scripts.js. This is deliberately NOT extended to
+      # suites touching module-specific APIs (tests/word/api, tests/*/shortcuts,
+      # tests/cell/js-api, ...): COMPILED=1's generated scripts.js references ONLY
+      # sdk-all-min.js, never sdk-all.js (mirrors the original Gruntfile's
+      # writeScripts() exactly — not a webpack-migration change), and
+      # AscWord/AscCommonExcel/etc. live in sdk-all.js, so those suites fail under
+      # COMPILED=1 with "AscWord is not defined" — a pre-existing limitation of
+      # developer-compiled mode, not something this step should be asserting on.
+      #
+      # api-{word,cell,slide,visio}-compiled.html cover exactly that gap: they load
+      # deploy/sdkjs/{module}/sdk-all-min.js + sdk-all.js directly (not through
+      # scripts.js at all) and assert the editor-specific namespace
+      # (AscWord/AscCommonExcel/AscCommonSlide/AscVisio) is actually defined — so a bad
+      # concat order or dropped file specific to one editor's "all" chunk doesn't ship
+      # undetected. deploy/ already has both chunks from "Run build sdkjs" above; no
+      # extra build step needed for these four.
+      - name: Run QUnit against the built bundle (COMPILED=1)
+        env:
+          # Same addon wiring as the "Run build sdkjs" step above — this step
+          # rebuilds develop/ from scratch and must merge the addon in too.
+          SDK_ADDONS: ../../sdkjs-forms
+          # `npm run develop` invokes build-develop.cjs directly (not through
+          # build-pipeline.cjs), so SKIP_STANDALONE isn't set for us here. Without
+          # it, copyStandalone() overwrites the Terser-minified, license-headered
+          # device_scale.js that "Run build sdkjs" (deploy-assets.cjs) already
+          # wrote to this same BUILD_ROOT, with a raw unprocessed copy — silently
+          # defeating that step's processing for the rest of this job.
+          SKIP_STANDALONE: '1'
+        run: |
+          cd sdkjs
+          COMPILED=1 npm run --prefix build develop
+          node node_modules/node-qunit-puppeteer/cli.js tests/common/api/api.html 30000 "--no-sandbox"
+          node node_modules/node-qunit-puppeteer/cli.js tests/common/api/api-cell.html 30000 "--no-sandbox"
+          node node_modules/node-qunit-puppeteer/cli.js tests/common/api/api-slide.html 30000 "--no-sandbox"
+          node node_modules/node-qunit-puppeteer/cli.js tests/common/api/api-visio.html 30000 "--no-sandbox"
+          node node_modules/node-qunit-puppeteer/cli.js tests/common/api/api-word-compiled.html 30000 "--no-sandbox"
+          node node_modules/node-qunit-puppeteer/cli.js tests/common/api/api-cell-compiled.html 30000 "--no-sandbox"
+          node node_modules/node-qunit-puppeteer/cli.js tests/common/api/api-slide-compiled.html 30000 "--no-sandbox"
+          node node_modules/node-qunit-puppeteer/cli.js tests/common/api/api-visio-compiled.html 30000 "--no-sandbox"

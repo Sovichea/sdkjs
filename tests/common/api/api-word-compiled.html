@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <title>Api test (word, COMPILED=1 all-chunk smoke test)</title>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/qunit/2.16.0/qunit.css" rel="stylesheet" media="screen" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/qunit/2.16.0/qunit.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/xregexp/3.2.0/xregexp-all.min.js"></script>
+
+    <!-- Loaded directly from deploy/, not develop/sdkjs/word/scripts.js: that manifest
+         under COMPILED=1 only ever references sdk-all-min.js, never sdk-all.js, so it
+         can't be used to smoke-test the "all" chunk. Order mirrors the non-compiled
+         writeScripts() file list (polyfill, AllFonts, then the sdk bundle), followed by
+         the "all" chunk — the same min-then-all order editorscommon.js uses at runtime. -->
+    <script type="text/javascript" src="../../../vendor/polyfill.js"></script>
+    <script type="text/javascript" src="../../../common/AllFonts.js"></script>
+    <script type="text/javascript" src="../../../deploy/sdkjs/word/sdk-all-min.js"></script>
+    <script type="text/javascript" src="../../../deploy/sdkjs/word/sdk-all.js"></script>
+
+    <script type="text/javascript">window.SDK_COMPILED_NAMESPACE = "AscWord";</script>
+    <script type="text/javascript" src="api-compiled.js"></script>
+</head>
+<body>
+<h1 id="qunit-header">Test the built "all" chunk of the document editor (word)</h1>
+<h2 id="qunit-banner"></h2>
+<div id="qunit-testrunner-toolbar"></div>
+<h2 id="qunit-userAgent"></h2>
+<ol id="qunit-tests"></ol>
+<div id="qunit-fixture">test markup, will be hidden</div>
+</body>
+</html>

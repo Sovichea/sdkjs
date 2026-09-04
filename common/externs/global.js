@@ -85,3 +85,10 @@ var VBArray;
 
 var CreateEmbedObject;
 var FreeEmbedObject;
+
+/** @constructor */ function Console() {}
+/** @param {...*} var_args */ Console.prototype.log = function(var_args) {};
+/** @param {...*} var_args */ Console.prototype.error = function(var_args) {};
+/** @param {...*} var_args */ Console.prototype.warn = function(var_args) {};
+/** @type {!Console} */ var console;
+

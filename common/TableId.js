@@ -58,10 +58,10 @@
 	{
 		if (this.m_bTurnOff || !Class)
 			return;
-		
+
 		Class.Id          = Id;
 		this.m_aPairs[Id] = Class;
-		
+
 		AscCommon.History.Add(new AscCommon.CChangesTableIdAdd(this, Id, Class));
 	};
 	CTableId.prototype.TurnOff = function()
@@ -437,6 +437,9 @@
 			this.m_oFactoryClass[AscDFH.historyitem_type_CViewPr]              = AscFormat.CCViewPr;
 			this.m_oFactoryClass[AscDFH.historyitem_type_ViewPrScale]          = AscFormat.CViewPrScale;
 			this.m_oFactoryClass[AscDFH.historyitem_type_ViewPrGuide]          = AscFormat.CViewPrGuide;
+			this.m_oFactoryClass[AscDFH.historyitem_type_Control]              = AscFormat.CControl;
+			this.m_oFactoryClass[AscDFH.historyitem_type_ControlPr]            = AscFormat.CControlPr;
+			this.m_oFactoryClass[AscDFH.historyitem_type_FormControlPr]        = AscFormat.CFormControlPr;
 
 		}
 

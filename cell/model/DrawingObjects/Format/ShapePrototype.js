@@ -163,6 +163,12 @@ function addToDrawings(worksheet, graphic, position, lockByDefault, anchor)
         drawingObject.ext.cx = oldDrawingBase.ext.cx;
         drawingObject.ext.cy = oldDrawingBase.ext.cy;
     }
+    if (graphic.initController && !graphic.controller) {
+        graphic.initController();
+    }
+    if (graphic.bDeleted) {
+        graphic.bDeleted = false;
+    }
     if(graphic.recalcTransform)
     {
         graphic.recalcTransform();
@@ -204,7 +210,6 @@ CChangeContentDrawingWorksheet.prototype.constructor = CChangeContentDrawingWork
 
 
     CChangeContentDrawingWorksheet.prototype.Load = function(Color){
-
         if(this.Class.worksheet && this.Class.worksheet.contentChanges) {
             if(this.IsAdd()) {
                 var Pos  = this.Class.worksheet.contentChanges.Check(AscCommon.contentchanges_Add, true === this.UseArray && AscFormat.isRealNumber(this.PosArray[0]) ? this.PosArray[0] : this.Pos);

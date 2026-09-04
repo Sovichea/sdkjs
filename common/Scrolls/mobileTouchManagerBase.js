@@ -1361,6 +1361,17 @@
 		this.ContextMenuShowTimerId = setTimeout(function()
 		{
 			that.ContextMenuShowTimerId = -1;
+
+			// On iOS the keyboard and the bottom formatting sheet occupy the same space.
+			// If the keyboard is visible (visualViewport has shrunk) suppress the sheet —
+			// showing it would steal keyboard focus and dismiss the keyboard.
+			// The user can dismiss the keyboard first and then tap to get the sheet.
+			if (AscCommon.AscBrowser.isSafariMobile && window.visualViewport &&
+				window.visualViewport.height < window.innerHeight * 0.8)
+			{
+				return;
+			}
+
 			var _pos = that.delegate.GetContextMenuPosition();
 			if (AscCommon.g_inputContext) AscCommon.g_inputContext.isGlobalDisableFocus = true;
 			that.Api.sendEvent("asc_onShowPopMenu", _pos.X, _pos.Y, _pos.Mode);

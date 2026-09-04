@@ -403,7 +403,7 @@
 			var xPos    = x ? x : parseInt(oTarget.style.left);
 			var yPos    = (y ? y : parseInt(oTarget.style.top)) + parseInt(oTarget.style.height);
 
-            if (AscCommon.AscBrowser.isSafari && AscCommon.AscBrowser.isMobile)
+            if (AscCommon.AscBrowser.isSafariMobile)
                 xPos = -100;
 
 			if (!this.isDebug && !this.isSystem)
@@ -573,7 +573,7 @@
 				this.debugTexBoxMaxH = 50;
 			}
 
-			if (AscCommon.AscBrowser.isSafari && AscCommon.AscBrowser.isMobile)
+			if (AscCommon.AscBrowser.isSafariMobile)
 			    _left = -100;
 
 			this.HtmlDiv.style.left = _left + "px";

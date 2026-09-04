@@ -3600,6 +3600,12 @@ function (window, undefined) {
 	asc_CShapeProperty.prototype.asc_putFromImage = function (v) {
 		this.bFromImage = v;
 	};
+	asc_CShapeProperty.prototype["asc_getIsControl"] = asc_CShapeProperty.prototype.asc_getIsControl = function () {
+		return this.bIsControl;
+	};
+	asc_CShapeProperty.prototype["asc_getIsCheckBox"] = asc_CShapeProperty.prototype.asc_getIsCheckBox = function () {
+		return this.bFromCheckBox;
+	};
 	asc_CShapeProperty.prototype.asc_getRot = function () {
 		return this.rot;
 	};
@@ -8855,6 +8861,8 @@ function (window, undefined) {
 	prot["put_Position"] = prot["asc_putPosition"] = prot.asc_putPosition;
 	prot["get_IsMotionPath"] = prot["asc_getIsMotionPath"] = prot.asc_getIsMotionPath;
 	prot["asc_getCanEditText"]		= prot.asc_getCanEditText;
+	prot["asc_getIsControl"]  = prot.asc_getIsControl;
+	prot["asc_getIsCheckBox"] = prot.asc_getIsCheckBox;
 	prot["asc_setCanEditText"]		= prot.asc_setCanEditText;
 
 	window["Asc"]["asc_CAnnotProperty"] = window["Asc"].asc_CAnnotProperty = asc_CAnnotProperty;

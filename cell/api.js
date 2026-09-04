@@ -5300,6 +5300,60 @@ var editor;
         }
     };
 
+  spreadsheet_api.prototype.asc_addCheckBoxOnSheet = function() {
+    if (!this.wb) return;
+    var ws = this.wb.getWorksheet();
+    if (ws && ws.model && ws.model.getSheetProtection(Asc.c_oAscSheetProtectType.objects)) {
+      return false;
+    }
+    if (ws && ws.objectRender) {
+      ws.objectRender.addCheckBoxOnSheet();
+    }
+  };
+
+  spreadsheet_api.prototype.asc_getCheckBoxProps = function() {
+    if (!this.wb) return null;
+    var ws = this.wb.getWorksheet();
+    if (!ws || !ws.objectRender || !ws.objectRender.controller) return null;
+    var ctrl = ws.objectRender.controller;
+    if (!ctrl.selectedObjects || ctrl.selectedObjects.length !== 1) return null;
+    var obj = ctrl.selectedObjects[0];
+    if (!obj || !obj.isControl || !obj.isControl() || !obj.isCheckBox || !obj.isCheckBox()) return null;
+    var fmlaLink = obj.formControlPr ? (obj.formControlPr.fmlaLink || '') : '';
+    var checked  = obj.formControlPr ? (obj.formControlPr.checked  || 0)  : 0;
+    var result = {};
+    result['checked'] = checked;
+    result['fmlaLink'] = fmlaLink;
+    return result;
+  };
+
+  spreadsheet_api.prototype.asc_setCheckBoxProps = function(props) {
+    if (!this.wb || !props || !this.canEdit()) return;
+    var ws = this.wb.getWorksheet();
+    if (!ws || !ws.objectRender || !ws.objectRender.controller) return;
+    var ctrl = ws.objectRender.controller;
+    if (!ctrl.selectedObjects || ctrl.selectedObjects.length !== 1) return;
+    var obj = ctrl.selectedObjects[0];
+    if (!obj || !obj.isControl || !obj.isControl() || !obj.isCheckBox || !obj.isCheckBox()) return;
+    var fmlaLink = props['fmlaLink'];
+    var checked  = props['checked'];
+    if (typeof fmlaLink !== 'undefined' && fmlaLink !== '') {
+      var linkCheck = parserHelp.checkDataRange(this.wbModel, this.wb, Asc.c_oAscSelectionDialogType.CheckBox, fmlaLink, true);
+      if (linkCheck !== Asc.c_oAscError.ID.No) return;
+    }
+    ctrl.checkObjectsAndCallback(function() {
+      if (obj.formControlPr) {
+        if (typeof checked !== 'undefined') {
+          obj.formControlPr.setChecked(checked);
+        }
+        if (typeof fmlaLink !== 'undefined') {
+          obj.formControlPr.setFmlaLink(fmlaLink);
+        }
+        obj.controller.updateCellFromControl();
+      }
+    }, [], false, AscDFH.historydescription_Spreadsheet_SwitchCheckbox, [obj]);
+  };
+
   spreadsheet_api.prototype.asc_addOleObjectAction = function(sLocalUrl, sData, sApplicationId, fWidth, fHeight, nWidthPix, nHeightPix, bSelect, arrImagesForAddToHistory)
   {
     var _image = this.ImageLoader.LoadImage(AscCommon.getFullImageSrc2(sLocalUrl), 1);
@@ -10281,6 +10335,9 @@ var editor;
   prot["asc_startAddShape"] = prot.asc_startAddShape;
   prot["asc_endAddShape"] = prot.asc_endAddShape;
   prot["asc_addShapeOnSheet"] = prot.asc_addShapeOnSheet;
+  prot["asc_addCheckBoxOnSheet"] = prot.asc_addCheckBoxOnSheet;
+  prot["asc_getCheckBoxProps"] = prot.asc_getCheckBoxProps;
+  prot["asc_setCheckBoxProps"] = prot.asc_setCheckBoxProps;
   prot["asc_canEditGeometry"] = prot.asc_canEditGeometry;
   prot["asc_editPointsGeometry"] = prot.asc_editPointsGeometry;
   prot["asc_isAddAutoshape"] = prot.asc_isAddAutoshape;

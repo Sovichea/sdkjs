@@ -7678,7 +7678,9 @@
 										protectionLocked: drawing.getProtectionLocked(),
 										protectionPrint: drawing.getProtectionPrint(),
 										x: drawing.x,
-										y: drawing.y
+										y: drawing.y,
+										bIsControl: drawing.getObjectType() === AscDFH.historyitem_type_Control,
+										bFromCheckBox: drawing.getObjectType() === AscDFH.historyitem_type_Control && !!(drawing.isCheckBox && drawing.isCheckBox())
 									};
 								if (!shape_props)
 									shape_props = new_shape_props;
@@ -8483,6 +8485,8 @@
 						shape_props.ShapeProperties.bFromSmartArtInternal = props.shapeProps.bFromSmartArtInternal;
 						shape_props.ShapeProperties.bFromGroup = props.shapeProps.bFromGroup;
 						shape_props.ShapeProperties.bFromImage = props.shapeProps.bFromImage;
+						shape_props.ShapeProperties.bIsControl = props.shapeProps.bIsControl;
+						shape_props.ShapeProperties.bFromCheckBox = props.shapeProps.bFromCheckBox;
 						shape_props.ShapeProperties.lockAspect = props.shapeProps.lockAspect;
 						shape_props.ShapeProperties.description = props.shapeProps.description;
 						shape_props.ShapeProperties.title = props.shapeProps.title;

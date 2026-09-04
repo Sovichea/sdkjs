@@ -6680,6 +6680,12 @@
 		CUniFill.prototype.isNoFill = function () {
 			return this.fill && this.fill.type === window['Asc'].c_oAscFill.FILL_TYPE_NOFILL;
 		};
+		// Returns true when the fill is typed as solid but has no resolved color — the
+		// broken VML case where fillcolor on a parent element is not propagated to the
+		// child <v:fill> element, leaving fill.color null and causing a white paint.
+		CUniFill.prototype.isBrokenSolidFill = function () {
+			return !!(this.fill && this.fill.type === window['Asc'].c_oAscFill.FILL_TYPE_SOLID && !this.isSolidFill());
+		};
 		CUniFill.prototype.isVisible = function () {
 			return this.fill && this.fill.type !== window['Asc'].c_oAscFill.FILL_TYPE_NOFILL;
 		};
@@ -7119,6 +7125,16 @@
 				_result_shape_prop.bFromImage = false;
 			} else {
 				_result_shape_prop.bFromImage = true;
+			}
+			if (shapeProp1.bIsControl || shapeProp2.bIsControl) {
+				_result_shape_prop.bIsControl = true;
+			} else {
+				_result_shape_prop.bIsControl = false;
+			}
+			if (shapeProp1.bFromCheckBox || shapeProp2.bFromCheckBox) {
+				_result_shape_prop.bFromCheckBox = true;
+			} else {
+				_result_shape_prop.bFromCheckBox = false;
 			}
 			if (shapeProp1.locked || shapeProp2.locked) {
 				_result_shape_prop.locked = true;

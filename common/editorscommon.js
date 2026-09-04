@@ -4135,6 +4135,25 @@
 				}
 			}
 		}
+		else if (cDialogType.CheckBox === dialogType)
+		{
+			if (!dataRange || dataRange === '') {
+				return Asc.c_oAscError.ID.No;
+			}
+			// Accept sheet-qualified refs ("Sheet1!$A$1") or plain refs ("$A$1")
+			var oRef3D = parserHelp.parse3DRef(dataRange);
+			if (oRef3D) {
+				sheetModel = model.getWorksheetByName(oRef3D.sheet);
+				if (!sheetModel) {
+					return Asc.c_oAscError.ID.DataRangeError;
+				}
+				if (sheetModel) {
+					range = AscCommonExcel.g_oRangeCache.getAscRange(oRef3D.range);
+				}
+			} else {
+				range = AscCommonExcel.g_oRangeCache.getAscRange(dataRange);
+			}
+		}
 		else
 		{
 			range = AscCommonExcel.g_oRangeCache.getAscRange(dataRange);

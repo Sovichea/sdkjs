@@ -13,10 +13,10 @@ ARG BUILD_ROOT
 #### BASE ####
 FROM ubuntu:24.04 AS web-base
     RUN apt-get update && \
-        apt-get install -y ca-certificates curl gnupg openjdk-21-jdk wget zip brotli bzip2 && \
+        apt-get install -y ca-certificates curl gnupg wget zip brotli bzip2 && \
         curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
         apt-get install -y nodejs && \
-        npm install -g @yao-pkg/pkg grunt-cli && \
+        npm install -g @yao-pkg/pkg && \
         rm -rf /var/lib/apt/lists/*
 
 #### SDKJS ####
@@ -26,11 +26,11 @@ FROM web-base AS sdkjs-base
 
     ARG PRODUCT_VERSION
 
-    COPY sdkjs/build/package*.json /app/build/
+    COPY sdkjs/build/package*.json sdkjs/build/npm-shrinkwrap.json /app/build/
 
     RUN --mount=type=cache,target=/root/.npm \
         cd app/build && \
-        npm install
+        npm ci
 
     COPY sdkjs/ /app
     COPY sdkjs-forms/ /sdkjs-forms
@@ -47,11 +47,12 @@ FROM web-base AS sdkjs-base
     COPY --from=core-wasm ${BUILD_ROOT}/libfont/ /app/common/libfont/
 
 FROM sdkjs-base AS sdkjs-desktop
-    ARG TARGETARCH
+    ENV SDK_ADDONS=/sdkjs-forms
+    ENV SDK_PLATFORM=desktop
     RUN cd app/build && \
-        CC_PLATFORM=$(if [ "$TARGETARCH" = "arm64" ]; then echo "java"; else echo "native,java"; fi) grunt --addon=sdkjs-forms --desktop=true
+        npm run build
 
 FROM sdkjs-base AS sdkjs
-    ARG TARGETARCH
+    ENV SDK_ADDONS=/sdkjs-forms
     RUN cd app/build && \
-        CC_PLATFORM=$(if [ "$TARGETARCH" = "arm64" ]; then echo "java"; else echo "native,java"; fi) grunt --addon=sdkjs-forms
+        npm run build

@@ -1,5 +1,6 @@
 GRUNT = grunt
-GRUNT_FLAGS = --no-color -v 
+GRUNT_FLAGS = --no-color -v
+SDK_PLATFORM ?=
 
 OUTPUT_DIR = deploy
 OUTPUT = $(OUTPUT_DIR)
@@ -23,6 +24,17 @@ GRUNT_ENV += PRODUCT_VERSION=$(PRODUCT_VERSION)
 GRUNT_ENV += BUILD_NUMBER=$(BUILD_NUMBER)
 GRUNT_ENV += APP_COPYRIGHT="$(APP_COPYRIGHT)"
 GRUNT_ENV += PUBLISHER_URL="$(PUBLISHER_URL)"
+
+# sdkjs's own build/ was migrated from Grunt to webpack (web-apps' build below is
+# unaffected — it still uses Grunt). The new pipeline reads the same
+# PRODUCT_VERSION/BUILD_NUMBER/APP_COPYRIGHT/PUBLISHER_URL via env vars, plus
+# SDK_PLATFORM instead of a --desktop=true CLI flag, and it errors out on any
+# stray CLI argument — so it must be invoked with no flags at all (no GRUNT_FLAGS).
+# Recursive (=), not simple (:=): SDK_PLATFORM must expand at recipe-run time so
+# the `desktop:` target-specific override below is picked up, not the empty
+# top-level default in effect at parse time.
+SDKJS_ENV = $(GRUNT_ENV)
+SDKJS_ENV += SDK_PLATFORM=$(SDK_PLATFORM)
 
 WEBAPPS_DIR := web-apps
 
@@ -49,9 +61,10 @@ $(WEBAPPS_FILES): $(NODE_MODULES) $(SDKJS_FILES)
 
 $(SDKJS_FILES): $(NODE_MODULES)
 	cd build && \
-		$(GRUNT_ENV) $(GRUNT) $(GRUNT_FLAGS)
+		$(SDKJS_ENV) npm run build
 
 desktop: GRUNT_FLAGS += --desktop=true
+desktop: SDK_PLATFORM = desktop
 desktop: all
 	
 clean:

@@ -62,13 +62,13 @@ echo "----------------------------------------"
 echo "Prepare to compile"
 echo "----------------------------------------"
 
-npm install
+npm ci
 
 echo "----------------------------------------"
 echo "Compile SDKJS"
 echo "----------------------------------------"
 
-PRODUCT_VERSION=$PRODUCT_VERSION BUILD_NUMBER=$BUILD_NUMBER npx grunt --level=WHITESPACE_ONLY --mobile=true #--level=ADVANCED | WHITESPACE_ONLY
+PRODUCT_VERSION=$PRODUCT_VERSION BUILD_NUMBER=$BUILD_NUMBER SDK_PLATFORM=mobile NODE_ENV=production npm run build
 
 if [ -z "$1" ] ; then
     # iOS

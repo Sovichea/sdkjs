@@ -177,6 +177,11 @@ AscBrowser.isAndroidNativeApp = (AscBrowser.userAgent.indexOf("ascandroidwebview
 
 AscBrowser.isTelegramWebView = (typeof TelegramWebviewProxy === "object") ? true : false;
 
+// True for Mobile Safari AND for iOS WKWebView apps that omit "Safari" from their
+// custom user agent (e.g. Nextcloud iOS). Both environments are WebKit on iOS and
+// require the same hidden-input positioning workaround.
+AscBrowser.isSafariMobile = (AscBrowser.isSafari || AscBrowser.isAppleDevices) && AscBrowser.isMobile;
+
 AscBrowser.zoom = 1;
 
 AscBrowser.isCustomScaling = function()

@@ -99,7 +99,8 @@ var c_oAscSelectionDialogType = {
   Solver_ObjectiveCell: 15,
   Solver_VariableCell: 16,
   Solver_Constraint: 17,
-  Solver_CellReference: 18
+  Solver_CellReference: 18,
+  CheckBox: 19
 };
 
 var c_oAscScrollType = {

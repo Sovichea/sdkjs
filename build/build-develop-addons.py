@@ -1,15 +1,16 @@
 #!/usr/bin/env python
+import os
 import sys
 sys.path.append('../../build_tools/scripts')
 import base
 import traceback
 
 try:
-    base.cmd_in_dir('.', "npm", ["install", "-g", "grunt-cli"])
-    base.cmd_in_dir('.', "npm", ["ci"])
+    os.environ['SDK_ADDONS'] = os.pathsep.join(['../../sdkjs-forms', '../../sdkjs-ooxml'])
+    os.environ['NODE_ENV'] = 'development'
 
-    base.cmd_in_dir('.', "grunt", ["--level=WHITESPACE_ONLY", "--addon=sdkjs-forms", "--addon=sdkjs-ooxml"])
-    base.cmd_in_dir('.', "grunt", ["develop", "--addon=sdkjs-forms", "--addon=sdkjs-ooxml"])
+    base.cmd_in_dir('.', "npm", ["ci"])
+    base.cmd_in_dir('.', "npm", ["run", "build"])
 
     input("Press Enter to continue...")
     exit(0)

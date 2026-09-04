@@ -1402,7 +1402,6 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
     DrawingBase.prototype.getGraphicObjectMetrics = function() {
         var _t = this;
         var metrics = { x: 0, y: 0, extX: 0, extY: 0 };
-
         var coordsFrom, coordsTo;
         switch(_t.Type)
         {
@@ -1434,20 +1433,18 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
             case c_oAscCellAnchorType.cellanchorTwoCell:
             {
                 if (this.worksheet) {
-                    coordsFrom = this.getDrawingObjects().calculateCoords(_t.from);
+                    var drawingObjects = this.getDrawingObjects();
+                    coordsFrom = drawingObjects.calculateCoords(_t.from);
+                    coordsTo = drawingObjects.calculateCoords(_t.to);
                     if (!this.worksheet.getRightToLeft()) {
                         metrics.x = this.pxToMm( coordsFrom.x );
                         metrics.y = this.pxToMm( coordsFrom.y );
-                        coordsTo = this.getDrawingObjects().calculateCoords(_t.to);
                         metrics.extX = this.pxToMm( coordsTo.x - coordsFrom.x );
                         metrics.extY = this.pxToMm( coordsTo.y - coordsFrom.y );
                     } else {
                         metrics.y = this.pxToMm( coordsFrom.y );
-
-                        coordsTo = this.getDrawingObjects().calculateCoords(_t.to);
-                        metrics.extX = this.pxToMm(  coordsFrom.x - coordsTo.x );
+                        metrics.extX = this.pxToMm( coordsFrom.x - coordsTo.x );
                         metrics.extY = this.pxToMm( coordsTo.y - coordsFrom.y );
-
                         metrics.x = this.pxToMm( coordsTo.x );
                     }
                 }
@@ -1985,6 +1982,93 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
         }
     };
 
+    _this.addCheckBoxOnSheet = function() {
+        if (!this.controller || !_this.canEdit()) {
+            return;
+        }
+        _this.controller.resetSelection();
+
+        var activeCell = worksheet.model.selectionRange.activeCell;
+        var metrics = {col: activeCell.col, colOff: 0, row: activeCell.row, rowOff: 0};
+        var coordsFrom = _this.calculateCoords(metrics);
+        var posX = _this.pxToMm(coordsFrom.x) + MOVE_DELTA;
+        var posY = _this.pxToMm(coordsFrom.y) + MOVE_DELTA;
+
+        var extX = 30;
+        var extY = 5;
+
+        History.Create_NewPoint();
+
+        var oControl = new AscFormat.CControl();
+
+        oControl.formControlPr.setFcObjectType(1);
+        oControl.formControlPr.setChecked(0);
+        oControl.formControlPr.setTextHAlign(6);
+        oControl.formControlPr.setTextVAlign(1);
+        oControl.formControlPr.setNoThreeD(true);
+
+        oControl.controlPr.setPrint(true);
+        oControl.controlPr.setAutoFill(false);
+        oControl.controlPr.setAutoLine(false);
+
+        oControl.name = _generateCheckBoxName(worksheet.model);
+
+        var oSpPr = new AscFormat.CSpPr();
+        oControl.setSpPr(oSpPr);
+        oSpPr.setGeometry(AscFormat.CreateGeometry('rect'));
+
+        var oLn = new AscFormat.CLn();
+        oLn.setFill(AscFormat.CreateSolidFillRGB(155, 155, 155));
+        oSpPr.setLn(oLn);
+
+        var oXfrm = new AscFormat.CXfrm();
+        oSpPr.setXfrm(oXfrm);
+        oXfrm.setOffX(posX);
+        oXfrm.setOffY(posY);
+        oXfrm.setExtX(extX);
+        oXfrm.setExtY(extY);
+
+        oControl.x    = posX;
+        oControl.y    = posY;
+        oControl.extX = extX;
+        oControl.extY = extY;
+
+        oControl.bDeleted = false;
+
+        oControl.initController();
+
+        oControl.createTextBody();
+        var oParagraph = oControl.txBody.content.GetAllParagraphs()[0];
+        oParagraph.MoveCursorToStartPos();
+        var oParaRun = new AscCommonWord.ParaRun(oParagraph);
+        oParaRun.AddText(oControl.name);
+        oParagraph.AddToContent(0, oParaRun);
+        oControl.initTextProperties();
+        oControl.setWorksheet(worksheet.model);
+        oControl.addToDrawingObjects(undefined, AscCommon.c_oAscCellAnchorType.cellanchorTwoCell);
+        oControl.controlPr.anchor = oControl.drawingBase;
+        oControl.checkDrawingBaseCoords();
+        oControl.select(_this.controller, 0);
+        _this.controller.startRecalculate();
+        worksheet.setSelectionShape(true);
+    };
+
+    function _generateCheckBoxName(wsModel) {
+        var existing = {};
+        var drawings = wsModel.Drawings || [];
+        for (var i = 0; i < drawings.length; i++) {
+            var go = drawings[i] && drawings[i].graphicObject;
+            if (go && go.name) {
+                existing[go.name] = true;
+            }
+        }
+        var n = 1;
+        while (existing['Check Box ' + n]) {
+            n++;
+        }
+        return 'Check Box ' + n;
+    }
+
     _this.getScrollOffset = function()
     {
         return scrollOffset;
@@ -2108,7 +2192,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
         _this.drawingDocument.drawingObjects = this;
         _this.drawingDocument.AutoShapesTrack = api.wb.autoShapeTrack;
         _this.drawingDocument.TargetHtmlElement = document.getElementById('id_target_cursor');
-        _this.drawingDocument.InitGuiCanvasShape(api.shapeElementId);
+        if (api.shapeElementId) { _this.drawingDocument.InitGuiCanvasShape(api.shapeElementId); }
         _this.controller = new AscFormat.DrawingObjectsController(_this);
         _this.canEdit = function() { return api.canEdit(); };
 
